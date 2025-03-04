@@ -6,7 +6,8 @@
     <title>Login</title>
     <style>
         body {
-            background-color: darkslategray;
+            /* background-color: darkslategray; */
+            background-color: cornflowerblue;
             color: white;
             /* font-family: Arial, sans-serif; */
             font-family: monospace;
@@ -76,23 +77,24 @@
         const errorMessage = document.getElementById("error-message");
         const submitButton = document.getElementById("submit-button");
 
-        // onload();
-        // async function onload() {
-        //     try {
-        //         const response = await fetch("http://localhost:8080/StorageAPI_Struts/login", {
-        //             method: "GET",
-        //             credentials: "include", 
-        //         });
-        //         const data = await response.json();
-        //         console.log(data.status);
-        //         if (response.ok || data.status === "success") {
-        //             // confirm("Login successful....");
-        //             window.location.href = `dashboard.html?user=${data.user}`;
-        //         }
-        //     } catch (error) {
-        //         showError(error.message);
-        //     }
-        // }
+        onload();
+        async function onload() {
+            try {
+                const response = await fetch("http://localhost:8080/StorageAPI_Struts/login", {
+                    method: "GET",
+                    credentials: "include", 
+                });
+                const raw = await response.json();
+                const data = JSON.parse(raw);
+                console.log(data.status);
+                if (response.ok || data.status === "success") {
+                    console.log(data.user);
+                    window.location.href = `dashboard.html?user=${data.user}`;
+                }
+            } catch (error) {
+                // showError(error.message);
+            }
+        }
         loginForm.addEventListener("submit", async (event) => {
             event.preventDefault();
             const user = document.getElementById("username").value.trim();
@@ -107,7 +109,7 @@
                 username: user,
                 password: passKey
             };
-
+            console.log("login running....");
             submitButton.disabled = true;
             errorMessage.textContent = "";
 
@@ -130,9 +132,12 @@
                 //     }
                 // }
 
-                const data = response.json();
+                const raw = await response.json();
+                const data = JSON.parse(raw);
+                console.log(data.status);
+                console.log(data.message);
                 if (response.ok || data.status === "success") {
-                    confirm("Login successful....");
+                    console.log(user);
                     window.location.href = `dashboard.html?user=${user}`;
                 } else {
                     throw new Error(data.message || "Login failed. Please try again.");

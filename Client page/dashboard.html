@@ -54,7 +54,9 @@
         }
 
         .popup {
-            background-color: darkslategray;
+            /* background-color: darkslategray; */
+            background-color: cornflowerblue;
+
             padding: 40px;
             border-radius: 5px;
             position: relative; 
@@ -82,11 +84,13 @@
             cursor: pointer;
             border-radius: 6px;
             font-size: medium;
+            border:none;
         }
         .button{
             cursor: pointer;
             border-radius: 6px;
             font-size: 16px;
+            border: none;
         }
         .textBox{
             background-color: white;
@@ -98,7 +102,8 @@
         }
     </style>
 </head>
-<body style="background-color: darkslategray;
+<body style="            background-color: cornflowerblue;
+
             color: white;font-family: monospace;">
     <h1>Post Manager </h1>
     <div id = "nameDisplay"></div>
@@ -144,7 +149,7 @@
     <script>
         const url = new URLSearchParams(window.location.search);
         const user = url.get("user");
-        const API_URL = `http://localhost:8080/StorageAPI/dashboard?user=${user}`;
+        const API_URL = `http://localhost:8080/StorageAPI_Struts/dashboard?user=${user}`;
 
         authenticate();
 
@@ -183,10 +188,11 @@
 
         async function authenticate(){
             try {
-                const response = await fetch(`http://localhost:8080/StorageAPI/dashboard?user=${user}`,
+                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/dashboard?user=${user}`,
                 {credentials: 'include'}
             );
             console.log(response.ok)
+            // alert("Started authentication...");    
             if (!response.ok) {
                 // throw new Error("Failed to fetch posts");
                 const posts = await response.json();
@@ -208,27 +214,29 @@
         }
     }
         async function fetchPosts() {
+            // alert("authenticated");
             try {
-                const response = await fetch(`http://localhost:8080/StorageAPI/dashboard?user=${user}`,
-                {
-                credentials: 'include'}
+                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/secure/dashboard?user=${user}`,
+                {credentials: 'include'}
             );
             document.getElementById("nameDisplay").innerHTML = `<h2>${user}</h2>`;
-                const posts = await response.json();
+                const raw = await response.json();
+                const posts = JSON.parse(raw);
                 const tableBody = document.querySelector("#postsTable tbody");
                 tableBody.innerHTML = ""; 
-
+                console.log(posts);
+                
                 posts.forEach(post => {
                     const row = document.createElement("tr");
                     row.innerHTML = `
-                        <td>${post.title}</td>
-                        <td>${post.body}</td>
-                        <td><button onClick="updatePreview('${post.title}','${post.body}')" style="background-color: white;border-radius: 6px;">Update</button>
-                            <button onClick="deletePost('${post.title}')" style="background-color: white;border-radius: 5px;">Delete</button></td>
-             
-                    `;
-                    tableBody.appendChild(row);
-                });
+                    <td>${post.title}</td>
+                    <td>${post.body}</td>
+                    <td><button onClick="updatePreview('${post.title}','${post.body}')" style="background-color: white;border-radius: 6px;border:none">Update</button>
+                        <button onClick="deletePost('${post.title}')" style="background-color: white;border-radius: 5px;border:none;">Delete</button></td>
+                        
+                        `;
+                        tableBody.appendChild(row);
+                    });
                 document.getElementById('title').value='';
                 document.getElementById('body').value='';
             } catch (error) {
@@ -303,13 +311,15 @@
             try {
                 const response = await fetch(`${API_URL}&keyTitle=${key}`, {
                     method: 'GET',
+                    credentials:"include",
                 });
                 console.log(`${API_URL}&keyTitle=${key}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch data');
                 }
 
-                const posts = await response.json(); 
+                const raw = await response.json(); 
+                const posts = JSON.parse(raw);
                 const tableBody = document.querySelector("#postsTable tbody");
                 tableBody.innerHTML = ""; 
 
@@ -339,14 +349,16 @@
 
             try {
                 const response = await fetch(`${API_URL}&keyContent=${key}`, {
-                    method: 'GET'
+                    method: 'GET',
+                    credentials:"include",
                 });
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch data');
                 }
 
-                const posts = await response.json(); 
+                const raw = await response.json(); 
+                const posts = JSON.parse(raw);
                 const tableBody = document.querySelector("#postsTable tbody");
                 tableBody.innerHTML = ""; 
 
@@ -384,11 +396,12 @@
         }
         async function logout() {
             try {
-                const response = await fetch("http://localhost:8080/StorageAPI/logout", {
+                const response = await fetch("http://localhost:8080/StorageAPI_Struts/logout", {
                     method: "GET",
                     credentials: "include", 
                 });
-                const data = await response.json();
+                const raw = await response.json();
+                const data = JSON.parse(raw);
                 console.log(data.status);
                 if (response.ok || data.status === "success") {
                     // alert("logout");
@@ -402,7 +415,8 @@
                     console.log()
                 }
             } catch (error) {
-                showError(error.message);
+                console.log(error);
+                // showError(error.message);
             }
         }
     </script>
