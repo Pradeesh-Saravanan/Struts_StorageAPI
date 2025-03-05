@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,6 +19,7 @@ import org.apache.struts2.ServletActionContext;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.google.gson.Gson;
+import com.model.Database;
 import com.opensymphony.xwork2.ActionSupport;
 
 public class LoginAction extends ActionSupport {
@@ -28,10 +28,10 @@ public class LoginAction extends ActionSupport {
 	private static String ORIGIN_STRING = "http://127.0.0.1:5500";
 	private static Map<String,String> map = new HashMap<>();
 	private static String jsonString;
-	private static Connection getConnection() throws SQLException,ClassNotFoundException{
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		return DriverManager.getConnection("jdbc:mysql://localhost:3306/demo","root","password");
-	}
+//	private static Connection getConnection() throws SQLException,ClassNotFoundException{
+//		Class.forName("com.mysql.cj.jdbc.Driver");
+//		return DriverManager.getConnection("jdbc:mysql://localhost:3306/demo","root","password");
+//	}
     public void doOptions(HttpServletRequest request, HttpServletResponse response) throws ServletException,IOException{
     	response.setHeader("Access-Control-Allow-Origin",ORIGIN_STRING);
         response.setHeader("Access-Control-Allow-Credentials", "true");
@@ -39,8 +39,17 @@ public class LoginAction extends ActionSupport {
     	response.setHeader("Access-Control-Allow-Headers","Content-Type, Authorization");
     	response.setStatus(HttpServletResponse.SC_OK);
     }	
-    public static String doPost(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException, ClassNotFoundException {
-        response.setHeader("Access-Control-Allow-Credentials", "true");
+//    public static String doPost(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException, ClassNotFoundException {
+        
+    public String doPost() throws ServletException, IOException, ClassNotFoundException {
+       	HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();
+		if ("OPTIONS".equals(request.getMethod())) {
+			doOptions(request,response);
+	    	response.setStatus(HttpServletResponse.SC_OK);
+			return SUCCESS;
+		}
+    	response.setHeader("Access-Control-Allow-Credentials", "true");
     	response.setHeader("Access-Control-Allow-Origin",ORIGIN_STRING);
     	response.setHeader("Access-Control-Allow-Methods","GET,OPTIONS,POST");
     	BufferedReader stream = new BufferedReader(new InputStreamReader(request.getInputStream()));
@@ -51,7 +60,7 @@ public class LoginAction extends ActionSupport {
     	}
     	Gson gson = new Gson();
     	User user = gson.fromJson(stringBuilder.toString(),User.class);
-    	try (Connection conn = getConnection()){
+    	try (Connection conn = Database.getConnection()){
     		String query = "select * from userLogin where username = ?";
     		try(PreparedStatement stmt = conn.prepareStatement(query)){
     			stmt.setString(1,user.getUsername());
@@ -65,24 +74,20 @@ public class LoginAction extends ActionSupport {
     					cookieQueryStatement.setString(1,rs.getString("id"));
     					cookieQueryStatement.executeUpdate();
     					response.setStatus(HttpServletResponse.SC_OK);
-    					response.setHeader("Set-Cookie","id="+rs.getString("id")+";Max-Age=86400;SameSite=None;Secure=true;");
-//    					response.setContentType("application/json");
+//    					response.setHeader("Set-Cookie","id="+rs.getString("id")+";Max-Age=86400;Path="+"/"+";HttpOnly=true;SameSite=None;Secure=true;");
+    					response.setHeader("Set-Cookie","id="+rs.getString("id")+";Max-Age=86400;Path="+"/StorageAPI_Struts/"+";HttpOnly=true;SameSite=None;Secure=true;");
     					map.put("status","success");
     					map.put("message","login successful");
+    					map.put("cookie","set at path");
     					jsonString = gson.toJson(map);
-//    					response.getWriter().println(gson.toJson(map));
-//    					response.getWriter().flush();
     					return SUCCESS;
     					
     				}
     				else {
     					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//    					response.setContentType("application/json");
     					map.put("status","failed");
     					map.put("message","wrong password");
     					jsonString = gson.toJson(map);
-//    					response.getWriter().println(gson.toJson(map));
-//    					response.getWriter().flush();
     					System.out.print("Wrong password");
     					return ERROR;
     				}
@@ -108,14 +113,21 @@ public class LoginAction extends ActionSupport {
     	}
     	return ERROR;
     }
-	public static String doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException, ClassNotFoundException {
+//	public static String doGet(HttpServletRequest request, HttpServletResponse response)
+//			throws ServletException, IOException, ClassNotFoundException {
+    public String doGet() throws ServletException, IOException, ClassNotFoundException {
+       	HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();
+		if ("OPTIONS".equals(request.getMethod())) {
+			doOptions(request,response);
+			return SUCCESS;
+		}
 		response.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 //		response.getWriter().println("Login servlet is running");
 		try {
 //		Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/demo","root","password");
-		Connection connection = getConnection();
+		Connection connection = Database.getConnection();
     	PreparedStatement preparedStatement = connection.prepareStatement("select * from userLogin where id = ?");
     	Boolean flagBoolean = false;
 	    	Cookie[] cks = request.getCookies();
@@ -166,25 +178,25 @@ public class LoginAction extends ActionSupport {
 		}
 		return null;
 	}
-    @Override
-    public String execute() throws IOException, ServletException, ClassNotFoundException {
-    	System.out.println("Login Action Execution started");
-    	HttpServletRequest request = ServletActionContext.getRequest();
-    	HttpServletResponse response = ServletActionContext.getResponse();
-    	String method = request.getMethod().toLowerCase();
-    	System.out.println(method);
-    	switch(method) {
-    	case "post":
-    		return doPost(request,response);
-//    		break;
-    	case "options":
-    		doOptions(request,response);
-    		return null;
-    	case "get":
-    		return doGet(request,response);
-    	}
-    	return ERROR;
-    }
+//    @Override
+//    public String execute() throws IOException, ServletException, ClassNotFoundException {
+//    	System.out.println("Login Action Execution started");
+//    	HttpServletRequest request = ServletActionContext.getRequest();
+//    	HttpServletResponse response = ServletActionContext.getResponse();
+//    	String method = request.getMethod().toLowerCase();
+//    	System.out.println(method);
+//    	switch(method) {
+//    	case "post":
+//    		return doPost(request,response);
+////    		break;
+//    	case "options":
+//    		doOptions(request,response);
+//    		return null;
+//    	case "get":
+//    		return doGet(request,response);
+//    	}
+//    	return ERROR;
+//    }
     
     public String getJsonString() {
     	return jsonString;
@@ -192,30 +204,4 @@ public class LoginAction extends ActionSupport {
     public void setJsonString(String jsonString) {
     	LoginAction.jsonString = jsonString;
     }
-	public static class User {
-		private String username;
-		private String password;
-
-		public User(String username, String password) {
-			this.username = username.trim();
-			this.password = password.trim();
-		}
-
-		public String getUsername() {
-			return this.username;
-		}
-
-		public void setUsername(String username) {
-			this.username = username;
-		}
-
-		public String getPassword() {
-			return this.password;
-		}
-
-		public void setPassword(String password) {
-			this.password = password;
-		}
-
-	}
 }

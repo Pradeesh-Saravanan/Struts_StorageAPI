@@ -3,9 +3,7 @@ package com.service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,21 +20,21 @@ import org.apache.struts2.ServletActionContext;
 
 import com.google.gson.Gson;
 import com.opensymphony.xwork2.ActionSupport;
-
+import com.model.Database;
 public class DashboardAction extends ActionSupport{
 
 	private static final long serialVersionUID = -929286120995712454L;
-	private static final String JDBC_URL = "jdbc:mysql://localhost:3306/demo"; 
-    private static final String JDBC_USER = "root"; 
-    private static final String JDBC_PASSWORD = "password"; 
+//	private static final String JDBC_URL = "jdbc:mysql://localhost:3306/demo"; 
+//    private static final String JDBC_USER = "root"; 
+//    private static final String JDBC_PASSWORD = "password"; 
     private static final String ORIGIN_STRING = "http://127.0.0.1:5500";
     private static Map<String,String> map;
     private static String jsonString;
 //    private static final String ORIGIN_STRING = "*";
 
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
-    }
+//    private Connection getConnection() throws SQLException {
+//        return DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+//    }
     
     protected String doOptions(HttpServletRequest request, HttpServletResponse response) 
         throws ServletException, IOException {
@@ -47,8 +45,11 @@ public class DashboardAction extends ActionSupport{
         response.setStatus(HttpServletResponse.SC_OK); 
         return SUCCESS;
     }
-    protected String doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setHeader("Access-Control-Allow-Origin", ORIGIN_STRING);
+//    protected String doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException {
+    public String doGet() throws ServletException, IOException, ClassNotFoundException {
+       	HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();
+    	response.setHeader("Access-Control-Allow-Origin", ORIGIN_STRING);
         response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         response.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -59,10 +60,10 @@ public class DashboardAction extends ActionSupport{
         }
         System.out.println("Dashboard is running");
         response.setContentType("application/json");
-		PrintWriter out = response.getWriter();
+//		PrintWriter out = response.getWriter();
 		Gson gson = new Gson();
 		map = new HashMap<>();
-		try (Connection conn = getConnection()) {
+		try (Connection conn = Database.getConnection()) {
 			PreparedStatement stmt = null;
 			String query = "";
 			if(request.getParameter("keyTitle")!=null) {
@@ -108,12 +109,16 @@ public class DashboardAction extends ActionSupport{
 		return null;
     }
 
-    protected String doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setHeader("Access-Control-Allow-Origin", ORIGIN_STRING);
+//    protected String doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException {
+    public String doPost() throws ServletException, IOException, ClassNotFoundException {
+       	HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();    
+    	response.setHeader("Access-Control-Allow-Origin", ORIGIN_STRING);
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
         
         if ("OPTIONS".equals(request.getMethod())) {
+        	doOptions(request,response);
             response.setStatus(HttpServletResponse.SC_OK);
             return SUCCESS;
         }
@@ -127,7 +132,7 @@ public class DashboardAction extends ActionSupport{
         Gson gson = new Gson();
         Post post = gson.fromJson(jsonString, Post.class);
 
-        try (Connection conn = getConnection()) {
+        try (Connection conn =Database.getConnection()) {
             String query = "INSERT INTO posts (title, body,created_by) VALUES (?, ?,?);";
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, post.getTitle());
@@ -151,12 +156,17 @@ public class DashboardAction extends ActionSupport{
         }
     }
 
-    protected String doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//    protected String doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException {
+        
+    public String doPut() throws ServletException, IOException, ClassNotFoundException {
+       	HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();
         response.setHeader("Access-Control-Allow-Origin", ORIGIN_STRING);
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
         
         if ("OPTIONS".equals(request.getMethod())) {
+        	doOptions(request,response);
             response.setStatus(HttpServletResponse.SC_OK);
             return ERROR;
         }
@@ -170,7 +180,7 @@ public class DashboardAction extends ActionSupport{
         Gson gson = new Gson();
         Post post = gson.fromJson(jsonString, Post.class);
 
-        try (Connection conn = getConnection()) {
+        try (Connection conn = Database.getConnection()) {
             String query = "UPDATE posts SET body = ? WHERE title = ? and created_by = ?";
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, post.getBody());
@@ -198,16 +208,19 @@ public class DashboardAction extends ActionSupport{
         return ERROR;
     }
 
-    protected String doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//    protected String doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException {
+        
+    public String doDelete() throws ServletException, IOException, ClassNotFoundException {
+       	HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();
         response.setHeader("Access-Control-Allow-Origin", ORIGIN_STRING);
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
         
         if ("OPTIONS".equals(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);
             return ERROR;
         }
-        response.setHeader(JDBC_URL, JDBC_PASSWORD);
         BufferedReader reader = new BufferedReader(new InputStreamReader(request.getInputStream()));
         StringBuilder sb = new StringBuilder();
         String line;
@@ -217,7 +230,7 @@ public class DashboardAction extends ActionSupport{
         String jsonString = sb.toString();
         Gson gson = new Gson();
         Post post = gson.fromJson(jsonString, Post.class);
-        try (Connection conn = getConnection()) {
+        try (Connection conn = Database.getConnection()) {
             String query = "DELETE FROM posts WHERE title = ?";
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, post.title);  
@@ -243,49 +256,25 @@ public class DashboardAction extends ActionSupport{
         }
         return ERROR;
     }
-    public static class Post {
-        private String title;
-        private String body;
-        public Post(String title, String body) {
-            this.title = title;
-            this.body = body;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public String getBody() {
-            return body;
-        }
-
-        public void setBody(String body) {
-            this.body = body;
-        }
-    } 
-	public String execute() throws IOException,ServletException,ClassNotFoundException{
-		System.out.println("Dashboard Action Execution started");
-    	HttpServletRequest request = ServletActionContext.getRequest();
-    	HttpServletResponse response = ServletActionContext.getResponse();
-    	String method = request.getMethod();
-    	switch(method) {
-    	case "POST":
-    		return doPost(request,response);
-    	case "OPTIONS":
-    		return doOptions(request,response);
-    	case "GET":
-    		return doGet(request,response);
-    	case "PUT":
-    		return doPut(request,response);
-    	case "DELETE":
-    		return doDelete(request,response);
-    	}
-    	return ERROR;
-	}
+//	public String execute() throws IOException,ServletException,ClassNotFoundException{
+//		System.out.println("Dashboard Action Execution started");
+//    	HttpServletRequest request = ServletActionContext.getRequest();
+//    	HttpServletResponse response = ServletActionContext.getResponse();
+//    	String method = request.getMethod();
+//    	switch(method) {
+//    	case "POST":
+//    		return doPost(request,response);
+//    	case "OPTIONS":
+//    		return doOptions(request,response);
+////    	case "GET":
+////    		return doGet(request,response);
+//    	case "PUT":
+//    		return doPut(request,response);
+//    	case "DELETE":
+//    		return doDelete(request,response);
+//    	}
+//    	return ERROR;
+//	}
     public String getJsonString() {
     	return jsonString;
     }

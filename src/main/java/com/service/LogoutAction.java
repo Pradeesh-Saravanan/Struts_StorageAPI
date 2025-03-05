@@ -2,7 +2,6 @@ package com.service;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -13,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.struts2.ServletActionContext;
 import com.google.gson.Gson;
+import com.model.Database;
 import com.opensymphony.xwork2.ActionSupport;
 
 
@@ -25,22 +25,22 @@ public class LogoutAction extends ActionSupport{
     public void setJsonString(String jsonString) {
     	LogoutAction.jsonString = jsonString;
     }
-    @Override
-    public String execute() throws IOException, ServletException, ClassNotFoundException {
-    	System.out.println("Login Action Execution started");
-    	HttpServletRequest request = ServletActionContext.getRequest();
-    	HttpServletResponse response = ServletActionContext.getResponse();
-    	String method = request.getMethod().toLowerCase();
-    	System.out.println(method);
-    	switch(method) {
-    	case "options":
-    		doOptions(request,response);
-    		return null;
-    	case "get":
-    		return doGet(request,response);
-    	}
-    	return ERROR;
-    }
+//    @Override
+//    public String execute() throws IOException, ServletException, ClassNotFoundException {
+//    	System.out.println("Login Action Execution started");
+//    	HttpServletRequest request = ServletActionContext.getRequest();
+//    	HttpServletResponse response = ServletActionContext.getResponse();
+//    	String method = request.getMethod().toLowerCase();
+//    	System.out.println(method);
+//    	switch(method) {
+//    	case "options":
+//    		doOptions(request,response);
+//    		return null;
+//    	case "get":
+//    		return doGet(request,response);
+//    	}
+//    	return ERROR;
+//    }
 	public static void doOptions(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		response.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
@@ -49,22 +49,17 @@ public class LogoutAction extends ActionSupport{
 		response.setHeader("Access-Control-Allow-Headers", "Content-Type");
 		response.setStatus(HttpServletResponse.SC_OK);
 	}
-	public static String doGet(HttpServletRequest request, HttpServletResponse response) {
+//	public static String doGet(HttpServletRequest request, HttpServletResponse response) throws ClassNotFoundException {
+	public String doGet() throws ServletException, IOException, ClassNotFoundException {
+		HttpServletRequest request = ServletActionContext.getRequest();
+	    HttpServletResponse response = ServletActionContext.getResponse();
 		response.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
-		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-		
-		}
-		catch(ClassNotFoundException e) {
-			
-		}
 		Cookie[] cks = request.getCookies();
-		boolean flag = true;
 		if(cks!=null) {
 			for(Cookie ck:cks) {
 				try {
-					Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/demo","root","password");
+					Connection connection = Database.getConnection();
 					PreparedStatement stmtPreparedStatement = connection.prepareStatement("update userLogin set value = 'false' where id = ?");
 					stmtPreparedStatement.setString(1,ck.getValue());
 					int rows = stmtPreparedStatement.executeUpdate();
@@ -72,11 +67,8 @@ public class LogoutAction extends ActionSupport{
 						Map<String,String> map = new HashMap<>();
 	                	Gson gson = new Gson();
 	                	response.setStatus(HttpServletResponse.SC_OK);
-//	                	response.setContentType("application/json");
 	        			map.put("status", "success");
 	        			map.put("message", "user Logout");
-//	        			response.getWriter().println(gson.toJson(map));
-//	        			response.getWriter().flush();
 	        			jsonString = gson.toJson(map);
 	        			System.out.println("Logout successful...");
 	        			return SUCCESS;
@@ -85,11 +77,8 @@ public class LogoutAction extends ActionSupport{
 						Map<String,String> map = new HashMap<>();
 	                	Gson gson = new Gson();
 	                	response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//	                	response.setContentType("application/json");
 	        			map.put("status", "failed");
 	        			map.put("message", "Unauthorized Access");
-//	        			response.getWriter().println(gson.toJson(map));
-//	        			response.getWriter().flush();
 	        			jsonString = gson.toJson(map);
 	        			System.out.println("Logout failed!");
 	        			return ERROR;
@@ -104,16 +93,8 @@ public class LogoutAction extends ActionSupport{
 			Map<String,String> map = new HashMap<>();
         	Gson gson = new Gson();
         	response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//        	response.setContentType("application/json");
 			map.put("status", "failed");
 			map.put("message", "Unauthorized Access");
-//			try {
-//				response.getWriter().println(gson.toJson(map));
-//				response.getWriter().flush();
-//			} catch (IOException e) {
-				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
 			jsonString = gson.toJson(map);
 			System.out.println("Logout failed!");
 			System.out.println("Cookies not found in logout servlet");

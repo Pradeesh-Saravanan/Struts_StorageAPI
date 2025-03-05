@@ -136,7 +136,6 @@
 package com.service;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -150,16 +149,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.struts2.ServletActionContext;
 
 import com.google.gson.Gson;
+import com.model.Database;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.interceptor.Interceptor;
 
 public class Gatekeeper implements Interceptor{
 	private static final long serialVersionUID = -2293124609402900717L;
-
-	private static Connection getConnection() throws SQLException,ClassNotFoundException{
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		return DriverManager.getConnection("jdbc:mysql://localhost:3306/demo","root","password");
-	}
 	@Override 
 	public String intercept(ActionInvocation invocation)throws Exception{
 		HttpServletRequest request = ServletActionContext.getRequest();
@@ -172,6 +167,11 @@ public class Gatekeeper implements Interceptor{
         response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "0");
+        response.setHeader("ETag", ""); 
+        response.setHeader("Last-Modified", "0");
         if("OPTIONS".equals(request.getMethod())) {
         	response.setStatus(HttpServletResponse.SC_OK);
         	return null;
@@ -182,11 +182,12 @@ public class Gatekeeper implements Interceptor{
         if(cks!=null) {
         	for(Cookie ck:cks) {
         		try {        	
-        			Connection connection = getConnection();
+        			Connection connection = Database.getConnection();
         			PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM userLogin WHERE id = ?");
                     preparedStatement.setString(1, ck.getValue());
                     ResultSet resultSet = preparedStatement.executeQuery();
-                    while (resultSet.next()) {
+                    if (resultSet.next()) {
+                    	System.out.println(resultSet.getString("username"));
                         if ("true".equals(resultSet.getString("value")) && request.getParameter("user").equals(resultSet.getString("username"))) {
                             flag = true;
                             break;
@@ -198,16 +199,19 @@ public class Gatekeeper implements Interceptor{
         		}
         	}
         }
+        else {
+        	System.out.println("No cookies at interceptor...");
+        }
         if(!flag) {
         	Map<String,String> map = new HashMap<>();
         	map.put("status","failed");
-        	map.put("message","Unauthorised access");
+        	map.put("message","Unauthorised access by interceptor");
         	Gson gson = new Gson();
         	response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         	response.setContentType("application/json");
         	response.getWriter().println(gson.toJson(map));
         	response.getWriter().flush();
-        	return null;
+        	return null	;
         }
 		return invocation.invoke();
 	}

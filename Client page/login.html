@@ -7,7 +7,7 @@
     <style>
         body {
             /* background-color: darkslategray; */
-            background-color: cornflowerblue;
+            background-color: #222831;
             color: white;
             /* font-family: Arial, sans-serif; */
             font-family: monospace;
@@ -19,12 +19,12 @@
         }
         .login-container {
             /* background-color: rgba(0, 0, 0, 0.7); */
-            background-color: #DCD7C9;
+            background-color: #3C5B6F;
             padding: 70px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             text-align: center;
-            color: black;
+            color: white;
         }
         .login-container h1 {
             margin-bottom: 20px;
@@ -46,7 +46,7 @@
             cursor: pointer;
         }
         .login-container button:disabled {
-            background-color: gray;
+            background-color: #31363F;
             cursor: not-allowed;
         }
         .error-message {
@@ -80,7 +80,7 @@
         onload();
         async function onload() {
             try {
-                const response = await fetch("http://localhost:8080/StorageAPI_Struts/login", {
+                const response = await fetch("http://localhost:8080/StorageAPI_Struts/login/get", {
                     method: "GET",
                     credentials: "include", 
                 });
@@ -114,7 +114,7 @@
             errorMessage.textContent = "";
 
             try {
-                const response = await fetch("http://localhost:8080/StorageAPI_Struts/login", {
+                const response = await fetch("http://localhost:8080/StorageAPI_Struts/login/post", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -134,10 +134,11 @@
 
                 const raw = await response.json();
                 const data = JSON.parse(raw);
-                console.log(data.status);
-                console.log(data.message);
+                // console.log(data.status);
+                // console.log(data.message);
                 if (response.ok || data.status === "success") {
-                    console.log(user);
+                    // console.log(user);
+                    // alert(data.cookie);
                     window.location.href = `dashboard.html?user=${user}`;
                 } else {
                     throw new Error(data.message || "Login failed. Please try again.");

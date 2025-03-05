@@ -3,34 +3,71 @@
         "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
         "https://struts.apache.org/dtds/struts-2.5.dtd">
     <struts>
-    <package name="default" extends="json-default">
+    <package name = "login-package" namespace="/login" extends = "struts-default,json-default">
+    	<action name = "get"  method = "doGet" class = "com.service.LoginAction">
+    		<result type="json">
+    			<param name="root">jsonString</param>
+    			<param name="noCache">true</param>
+        		<param name="excludeNullProperties">true</param>
+    		</result>
+    	</action>
+    	<action name = "post" method = "doPost" class ="com.service.LoginAction" >
+    		<result type="json">
+    			<param name="root">jsonString</param>
+    			<param name="noCache">true</param>
+        		<param name="excludeNullProperties">true</param>
+    		</result>
+    	</action>
+    </package>
+    
+    <package name = "dashboard-package" namespace="/dashboard" extends="json-default">
     	<interceptors>
-    		<interceptor name="authenticator" class="com.service.Gatekeeper"></interceptor>
+    		<interceptor name = "authenticator" class = "com.service.Gatekeeper"/>
     	</interceptors>
-        <action name="login" class="com.service.LoginAction">
-            <result type="json">
-            	<param name="root">jsonString</param>
-             	<param name="noCache">true</param>
+    	<action name = "get" method = "doGet" class="com.service.DashboardAction">
+    		<interceptor-ref name="authenticator"/>
+    		<result type="json">
+    			<param name="root">jsonString</param>
+    			<param name="noCache">true</param>
         		<param name="excludeNullProperties">true</param>
-            </result>
-        </action>
-        <action name="dashboard" class="com.service.DashboardAction">
-        	<interceptor-ref name="authenticator"/>
-        	<result type="json">
-            	<param name="root">jsonString</param>
-            	<param name="noCache">true</param>
+    		</result>
+    	</action>
+    	<action name = "post" method = "doPost" class="com.service.DashboardAction">
+    		<interceptor-ref name="authenticator"/>
+    		<result type="json">
+    			<param name="root">jsonString</param>
+    			<param name="noCache">true</param>
         		<param name="excludeNullProperties">true</param>
-            </result>
-        </action>
-        <action name = "logout" class = "com.service.LogoutAction">
+    		</result>
+    	</action>
+    	<action name = "delete" method = "doDelete" class="com.service.DashboardAction">
+    		<interceptor-ref name="authenticator"/>
+    		<result type="json">
+    			<param name="root">jsonString</param>
+    			<param name="noCache">true</param>
+        		<param name="excludeNullProperties">true</param>
+    		</result>
+    	</action>
+    	<action name = "put" method = "doPut" class="com.service.DashboardAction">
+    		<interceptor-ref name="authenticator"/>
+    		<result type="json">
+    			<param name="root">jsonString</param>
+    			<param name="noCache">true</param>
+        		<param name="excludeNullProperties">true</param>
+    		</result>
+    	</action>
+    </package>
+    
+    <package name="default" extends="json-default">
+        <action name = "logout" method = "doGet" class = "com.service.LogoutAction">
         	<result type="json">
         		<param name = "root">jsonString</param>
         		<param name="noCache">true</param>
         		<param name = "excludeNullProperties">true</param>
         	</result>
         </action>
-        <action name="register" class = "com.service.RegistrationAction">
-        	<result type = "json">
+        <action name="register" method = "doPost" class = "com.service.RegistrationAction">
+        	<result type = "json">	
         		<param name = "root">jsonString</param>
         		<param name = "noCache">true</param>
         		<param name = "excludeNullProperties">true</param>

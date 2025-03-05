@@ -20,6 +20,7 @@ import org.apache.struts2.ServletActionContext;
 import org.mindrot.jbcrypt.*;
 
 import com.google.gson.*;
+import com.model.Database;
 import com.opensymphony.xwork2.ActionSupport;	
 
 public class RegistrationAction extends ActionSupport {
@@ -31,17 +32,10 @@ public class RegistrationAction extends ActionSupport {
 		response.setHeader("Access-Control-Allow-Headers", "Content-Type, access-control-allow-methods");
 		response.setStatus(HttpServletResponse.SC_OK);
 	}
-	private Connection getConnection() throws SQLException, ClassNotFoundException{
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		return DriverManager.getConnection("jdbc:mysql://localhost:3306/demo","root","password");
-	}
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		response.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
-		response.setHeader("Access-Control-Allow-Credentials", "true");
-		response.getWriter().println("Registration servlet is running");
-	}
-	protected String doPost(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException{
+//	protected String doPost(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException{
+    public String doPost() throws ServletException, IOException, ClassNotFoundException {
+       	HttpServletRequest request = ServletActionContext.getRequest();
+        HttpServletResponse response = ServletActionContext.getResponse();
 		response.setHeader("Access-Control-Allow-Origin","*");
 		response.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,access-control-allow-methods");
 		response.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
@@ -59,7 +53,7 @@ public class RegistrationAction extends ActionSupport {
 		Gson gson = new Gson();
 		User user = gson.fromJson(sb.toString(),User.class);
 		Map<String,String> map = new HashMap<>();
-		try(Connection conn = getConnection()){
+		try(Connection conn = Database.getConnection()){
 			String query = "select username from userLogin where username = ?";
 			try(PreparedStatement stmt = conn.prepareStatement(query)){
 				stmt.setString(1, user.getUsername());
@@ -101,23 +95,22 @@ public class RegistrationAction extends ActionSupport {
 		}
 		return null;
 	}
-    @Override
-    public String execute() throws IOException, ServletException, ClassNotFoundException {
-    	System.out.println("Login Action Execution started");
-    	HttpServletRequest request = ServletActionContext.getRequest();
-    	HttpServletResponse response = ServletActionContext.getResponse();
-    	String method = request.getMethod().toLowerCase();
-    	System.out.println(method);
-    	switch(method) {
-    	case "post":
-    		return doPost(request,response);
-//    		break;
-    	case "options":
-    		doOptions(request,response);
-    		return null;
-    	}
-    	return ERROR;
-    }
+//    @Override
+//    public String execute() throws IOException, ServletException, ClassNotFoundException {
+//    	System.out.println("Login Action Execution started");
+//    	HttpServletRequest request = ServletActionContext.getRequest();
+//    	HttpServletResponse response = ServletActionContext.getResponse();
+//    	String method = request.getMethod().toLowerCase();
+//    	System.out.println(method);
+//    	switch(method) {
+//    	case "post":
+//    		return doPost(request,response);
+//    	case "options":
+//    		doOptions(request,response);
+//    		return null;
+//    	}
+//    	return ERROR;
+//    }
     
     public String getJsonString() {
     	return jsonString;
@@ -125,24 +118,4 @@ public class RegistrationAction extends ActionSupport {
     public void setJsonString(String jsonString) {
     	RegistrationAction.jsonString = jsonString;
     }
-	public class User{
-		private String username;
-		private String password;
-		public User(String username,String password) {
-			this.username = username.trim();
-			this.password = password.trim();
-		}
-		public String getUsername() {
-			return this.username;
-		}
-		public void setUsername(String username) {
-			this.username = username;
-		}
-		public String getPassword() {
-			return this.password;
-		}
-		public void setPassword(String password) {
-			this.password = password;
-		}
-	}
 }

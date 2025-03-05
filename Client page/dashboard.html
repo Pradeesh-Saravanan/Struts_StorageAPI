@@ -13,12 +13,13 @@
             margin-left: 1%;
             margin-top: 3%;
             border-collapse: collapse;
-            background-color:aliceblue;
-            color: black;
+            /* background-color:aliceblue; */
+            background-color:#3C5B6F;
+            color: white;
         }
         table, th, td,tr {
             /* border: 1px solid white; */
-            border-bottom:1px solid #DCD7C9;
+            /* border-bottom:1px solid #76ABAE; */
             font-size: large;
         }
         th, td {
@@ -26,7 +27,7 @@
             text-align: left;
         }
         th {
-            background-color: #DCD7C9;
+            background-color: #76ABAE;
         } 
        
         .form-container {
@@ -41,7 +42,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); Semi-transparent black;
+            background-color: rgba(0, 0, 0, 0.5) Semi-transparent black;
             display: none; 
             justify-content: center; 
             align-items: center; 
@@ -85,6 +86,7 @@
             border-radius: 6px;
             font-size: medium;
             border:none;
+            height: 30px;
         }
         .button{
             cursor: pointer;
@@ -100,11 +102,23 @@
             border-radius: 3px;
             margin: 5px;
         }
+
+        .container {
+                display: flex;
+                align-items: center; /* Vertically align items */
+                gap: 10px; /* Adds space between elements */
+                width: 400px;
+        }
+
+        .textBox {
+            flex: 5; /* Optional: Adjust width of the input box */
+        }
+
+
+
     </style>
 </head>
-<body style="            background-color: cornflowerblue;
-
-            color: white;font-family: monospace;">
+<body style="background-color: #222831;color: white;font-family: monospace;">
     <h1>Post Manager </h1>
     <div id = "nameDisplay"></div>
     <input type="submit" value="Logout" onclick="logout()" class="close">
@@ -131,10 +145,12 @@
     </div>
 <br><br>
     <!-- <h2>Posts</h2> -->
+     <div class="container">
     <input type="text" id="searchBox" placeholder="Search" class="textBox">
     <button onclick="searchTitleOnPost()" class="button">Title</button>
     <button onclick="searchContentOnPost()" class="button">Body</button>
     <button onclick="fetchPosts()" class="refresh">Refresh</button>
+    </div>
     <table id="postsTable">
         <thead >
             <tr>
@@ -149,10 +165,8 @@
     <script>
         const url = new URLSearchParams(window.location.search);
         const user = url.get("user");
-        const API_URL = `http://localhost:8080/StorageAPI_Struts/dashboard?user=${user}`;
 
         authenticate();
-
         const openPopupButton = document.getElementById('create');
         const closePopupButton = document.getElementById('closePopupButton');
         const popupOverlay = document.getElementById('Overlay');
@@ -188,22 +202,23 @@
 
         async function authenticate(){
             try {
-                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/dashboard?user=${user}`,
-                {credentials: 'include'}
+                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/dashboard/get?user=${user}`,
+                {method: 'GET',
+                credentials:"include",}
             );
             console.log(response.ok)
             // alert("Started authentication...");    
             if (!response.ok) {
                 // throw new Error("Failed to fetch posts");
                 const posts = await response.json();
-                console.log(posts);
                 if(posts.status=="failed"){
-                    // alert("Authentication failed! Login please");
+                    alert("Authentication failed! Login please");
                     window.location.href="login.html";
                     return;
                 }
             }
             else{
+                // alert("successful....");
                 console.log("calling fetchposts...");
                 fetchPosts();
             }
@@ -216,7 +231,7 @@
         async function fetchPosts() {
             // alert("authenticated");
             try {
-                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/secure/dashboard?user=${user}`,
+                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/dashboard/get?user=${user}`,
                 {credentials: 'include'}
             );
             document.getElementById("nameDisplay").innerHTML = `<h2>${user}</h2>`;
@@ -224,7 +239,6 @@
                 const posts = JSON.parse(raw);
                 const tableBody = document.querySelector("#postsTable tbody");
                 tableBody.innerHTML = ""; 
-                console.log(posts);
                 
                 posts.forEach(post => {
                     const row = document.createElement("tr");
@@ -252,7 +266,7 @@
             }
 
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/dashboard/post?user=${user}`, {
                     method: "POST",
                     credentials:"include",
                     headers: { "Content-Type": "application/json" },
@@ -284,7 +298,7 @@
             }
 
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/dashboard/put?user=${user}`, {
                     method: "PUT",
                     credentials:"include",
                     headers: { "Content-Type": "application/json" },
@@ -309,11 +323,10 @@
             }
 
             try {
-                const response = await fetch(`${API_URL}&keyTitle=${key}`, {
+                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/dashboard/get?user=${user}&keyTitle=${key}`, {
                     method: 'GET',
                     credentials:"include",
                 });
-                console.log(`${API_URL}&keyTitle=${key}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch data');
                 }
@@ -334,7 +347,6 @@
                     `;
                     tableBody.appendChild(row);
                 });
-                // document.getElementById('keyTitle').value='';
             } catch (error) {
                 console.error("Error searching posts:", error);
                 alert("Failed to search posts. Check console for details.");
@@ -348,7 +360,7 @@
             }
 
             try {
-                const response = await fetch(`${API_URL}&keyContent=${key}`, {
+                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/dashboard/get?user=${user}&keyContent=${key}`, {
                     method: 'GET',
                     credentials:"include",
                 });
@@ -381,7 +393,7 @@
         }
         async function deletePost(title) {
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch(`http://localhost:8080/StorageAPI_Struts/dashboard/delete?user=${user}`, {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     credentials:"include",
